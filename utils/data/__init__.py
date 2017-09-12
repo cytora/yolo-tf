@@ -31,19 +31,19 @@ def decode_image_objects(paths):
             reader = tf.TFRecordReader()
             _, serialized = reader.read(tf.train.string_input_producer(paths))
             example = tf.parse_single_example(serialized, features={
-                'imagepath': tf.FixedLenFeature([], tf.string),
+                'image': tf.FixedLenFeature((), tf.string, default_value=''),
                 'imageshape': tf.FixedLenFeature([3], tf.int64),
                 'objects': tf.FixedLenFeature([2], tf.string),
             })
-        imagepath = example['imagepath']
+        image_bytes = example['image']
         objects = example['objects']
         with tf.name_scope('decode_objects'):
             objects_class = tf.decode_raw(objects[0], tf.int64, name='objects_class')
             objects_coord = tf.decode_raw(objects[1], tf.float32)
             objects_coord = tf.reshape(objects_coord, [-1, 4], name='objects_coord')
         with tf.name_scope('load_image'):
-            imagefile = tf.read_file(imagepath)
-            image = tf.image.decode_jpeg(imagefile, channels=3)
+            # imagefile = tf.read_file(imagepath)
+            image = tf.image.decode_image(image_bytes, channels=3)
     return image, example['imageshape'], objects_class, objects_coord
 
 
